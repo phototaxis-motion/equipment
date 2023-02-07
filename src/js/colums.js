@@ -69,7 +69,15 @@ const sorters = {
   id: {
     compare: (a,b) => a.id - b.id,
     multiple: 1
-  }
+  },
+  price: {
+    compare: (a,b) => a.price - b.price,
+    multiple: 1
+  },
+  salvage: {
+    compare: (a,b) => a.salvage - b.salvage,
+    multiple: 1
+  },
 }
 
 const widths = {

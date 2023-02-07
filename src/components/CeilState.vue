@@ -7,24 +7,24 @@ const prop = defineProps({
     type: Boolean,
     default: false
   },
-  category: {
+  state: {
     type: String
   }
 })
 // TODO value key 統整
-const categories = [
+const states = [
   {
-    label: '電腦',
+    label: '使用中',
     color: 'green',
-    key: 'pc'
+    key: 'inuse'
   }, {
-    label: '設備',
+    label: '報廢',
+    color: 'red',
+    key: 'scrap'
+  }, {
+    label: '維修',
     color: 'blue',
-    key: 'eq'
-  }, {
-    label: '辦公',
-    color: 'pink',
-    key: 'of'
+    key: 'maintenance'
   }
 ]
 const defaultConfig = {
@@ -33,11 +33,11 @@ const defaultConfig = {
 }
 const editValue = ref('')
 const editoTag = computed(() => {
-  const tag = categories.find((t) => t.key === editValue.value)
+  const tag = states.find((t) => t.key === editValue.value)
   return editValue && tag || null
 })
 const config = computed(() => {
-  const tag = categories.find((t) => t.key === prop.category)
+  const tag = states.find((t) => t.key === prop.state)
   return tag || defaultConfig
 })
 
@@ -45,7 +45,7 @@ const selectHandler = ({ key }) => {
   editValue.value = key
 }
 const reset = () => {
-  editValue.value = prop.category
+  editValue.value = prop.state
 }
 onMounted(reset)
 </script>
@@ -62,7 +62,7 @@ onMounted(reset)
       <a v-else href="javascript:;">Click</a>
       <template #overlay>
         <a-menu @click="selectHandler">
-          <a-menu-item v-for="button in categories" :key="button.key">
+          <a-menu-item v-for="button in states" :key="button.key">
             <a-tag :color="button.color">
               {{ button.label }}
             </a-tag>

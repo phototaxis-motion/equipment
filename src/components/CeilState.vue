@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watchEffect } from 'vue'
 import { CaretDownOutlined } from '@ant-design/icons-vue';
 
+const emit = defineEmits(['update'])
 const prop = defineProps({
   edit: {
     type: Boolean,
@@ -9,7 +10,11 @@ const prop = defineProps({
   },
   state: {
     type: String
-  }
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
 })
 // TODO value key 統整
 const states = [
@@ -48,13 +53,14 @@ const reset = () => {
   editValue.value = prop.state
 }
 onMounted(reset)
+watchEffect(() => emit('update', editValue.value))
 </script>
 <template>
   <div>
     <a-tag v-if="!edit" :color="config.color">
       {{ config.label }}
     </a-tag>
-    <a-dropdown v-else>
+    <a-dropdown v-else :disabled="disabled">
       <a-tag v-if="editoTag" :color="editoTag && editoTag.color">
         {{ editoTag.label }}
         <caret-down-outlined />

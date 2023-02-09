@@ -1,11 +1,25 @@
 <script setup>
+import { ref, reactive, onMounted, inject, getCurrentInstance } from 'vue';
 const prop = defineProps({
   edit: {
     type: Boolean,
     default: false
   },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
 })
 const emit = defineEmits(['startEdit', 'submit', 'cancel', 'delete'])
+const self = getCurrentInstance()
+const state = reactive({
+  loading: false
+})
+const submitHandler = () => {
+  state.loading = true
+  emit("submit", self)
+}
+defineExpose({ state })
 </script>
 <template>
   <div style="display: flex;">
@@ -14,7 +28,10 @@ const emit = defineEmits(['startEdit', 'submit', 'cancel', 'delete'])
       <a-button size="small" @click="emit('delete')" danger>刪除</a-button>
     </template>
     <template v-else>
-      <a-button type="primary" @click="emit('submit')" size="small">確定</a-button>
+      <a-button type="primary" :loading="state.loading" @click="submitHandler" size="small">{{
+        state.loading ?
+          '' : '確定'
+      }}</a-button>
       <a-button size="small" @click="emit('cancel')">取消</a-button>
     </template>
   </div>

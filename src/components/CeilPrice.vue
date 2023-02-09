@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watchEffect } from 'vue'
 import { CaretDownOutlined } from '@ant-design/icons-vue';
 
+const emit = defineEmits(['update'])
 const prop = defineProps({
   edit: {
     type: Boolean,
@@ -9,7 +10,11 @@ const prop = defineProps({
   },
   price: {
     type: Number
-  }
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const editValue = ref(0)
@@ -19,12 +24,13 @@ const reset = () => {
   editValue.value = prop.price
 }
 onMounted(reset)
+watchEffect(() => emit('update', editValue.value))
 </script>
 <template>
   <div>
     <a-space v-if="!edit">
       {{ price }}
     </a-space>
-    <a-input v-else suffix="NTD" v-model:value="editValue" type="number" min="0" />
+    <a-input v-else suffix="NTD" v-model:value="editValue" type="number" min="0" :disabled="disabled" />
   </div>
 </template>

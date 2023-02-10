@@ -12,17 +12,20 @@ const prop = defineProps({
   id: {
     type: String
   },
+  src: {
+    type: String,
+    default: ''
+  },
   disabled: {
     type: Boolean,
     default: false
   },
 })
-const src = ref('')
 
 // input
-const imageUrl = ref('')
 const fileList = ref([]);
 const inputLoading = ref(false);
+const previewImageUrl = ref('')
 
 const loaded = ref(false)
 const loading = ref(false)
@@ -45,7 +48,7 @@ const handleUploadChange = info => {
   if (info.file.status === 'done') {
     // Get this url from response in real world.
     getBase64(info.file.originFileObj, base64Url => {
-      imageUrl.value = base64Url;
+      previewImageUrl.value = base64Url;
       inputLoading.value = false;
     });
   }
@@ -75,7 +78,10 @@ const handleRemove = file => {
 };
 
 watchEffect(() => emit('update', editValue.value))
-
+onMounted(() => {
+  // 是否已經載入 TODO 網址驗證
+  loaded.value = !!prop.src
+})
 </script>
 <template>
   <div>
@@ -89,7 +95,7 @@ watchEffect(() => emit('update', editValue.value))
       <a-upload v-model:file-list="fileList" name="avatar" list-type="picture-card" class="avatar-uploader" method="get"
         :show-upload-list="false" :disabled="disabled" :before-upload="beforeUpload" @change="handleUploadChange"
         @remove="handleRemove">
-        <img v-if="imageUrl" :src="imageUrl" alt="avatar" :width="100" />
+        <img v-if="previewImageUrl || src" :src="previewImageUrl || src" alt="avatar" :width="100" />
         <div v-else>
           <loading-outlined v-if="inputLoading"></loading-outlined>
           <plus-outlined v-else></plus-outlined>

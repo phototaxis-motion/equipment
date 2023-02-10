@@ -7,20 +7,18 @@ import CeilPrice from './components/CeilPrice.vue'
 import CeilState from './components/CeilState.vue'
 import CeilString from './components/CeilString.vue'
 import CeilPhoto from './components/CeilPhoto.vue'
+import Avatar from './components/Avatar.vue'
 import ButtonAddItem from './components/ButtonAddItem.vue'
-import { reactive, ref, computed, onMounted } from 'vue'
-// import {  } from '@vueuse/core'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
+// import { } from '@vueuse/core'
 
 import _columns from './js/colums'
-import data from './js/devData'
-import { useDatabase, addItem } from './js/useDatabase'
+// import data from './js/devData'
+import { useDatabase, addItem, changeItem, useSyncDataList } from './js/useDatabase'
 import { getImageUrlById } from './js/useStorage'
+import { initAuth, useAuthState } from './js/useAuth'
 import { getDatabase, ref as dbRef, child, get as dbGet } from "firebase/database";
 
-const preOperateDate = data.map(d => {
-  return { ...d, _update: {}, date: new Date(d.date) }
-})
-const dataSource = reactive(preOperateDate)
 const columnsData = reactive(_columns)
 const columns = computed(() => {
   return columnsData.filter((col => checkedList.value.includes(col.title)))
@@ -50,44 +48,52 @@ const editUpdateHandler = (record, key, value) => {
 const editCancelHandler = (record) => {
   record.edit = false
 }
-const editSubmitHandler = (record, opCeil) => {
-  setTimeout(() => {
+const editSubmitHandler = async (record, opCeil) => {
+  console.log(record)
+  const callback = () => {
     opCeil.exposed.state.loading = false
     record.edit = false
-  }, 1000);
-
+  }
+  await changeItem(record.id, record._update, callback)
 }
 const addItemHandler = async (callback, data) => {
   const newRef = await addItem(data)
-  const url = await getImageUrlById('test')
-  console.log(data)
-  setTimeout(callback, 1000)
+  // const url = await getImageUrlById('test')
+  callback()
 } // TODO
 
-onMounted(async () => {
-  const db = useDatabase()
-  // const myDbRef = dbRef(db);
+const jsonData = useSyncDataList()
+const preOperateData = (item) => {
+  return { ...item, _update: {}, date: new Date(item.date) }
+}
 
-  // dbGet(child(myDbRef, 'list')).then(snapshot => {
-  //   if (snapshot.exists()) {
-  //     console.log(snapshot.val());
-  //   } else {
-  //     console.log("No data available");
-  //   }
-  // }).catch((error) => {
-  //   console.error(error);
-  // });
-
+// 更新顯示資料
+const dataSource = ref([])
+watch(jsonData, (obj) => {
+  dataSource.value = []
+  const data = []
+  for (const [key, value] of Object.entries(obj)) {
+    data.push(preOperateData({ ...value, id: key, date: new Date(value.date) }))
+  }
+  dataSource.value = data
 })
+
+onMounted(() => {
+  initAuth()
+})
+const avatarState = useAuthState()
 </script>
 
 <template>
   <a-layout class="app-table">
     <a-layout-header>
-      <a-checkbox-group v-model:value="checkedList" :options="plainOptions" @change="onCheckboxChange" />
+      <Avatar :state="avatarState"></Avatar>
     </a-layout-header>
     <a-layout-header>
       <button-add-item @submit="addItemHandler"></button-add-item>
+    </a-layout-header>
+    <a-layout-header>
+      <a-checkbox-group v-model:value="checkedList" :options="plainOptions" @change="onCheckboxChange" />
     </a-layout-header>
     <a-layout-content>
       <a-table size="large" :dataSource="dataSource" :columns="columns" @change="handleTableChange">
@@ -111,8 +117,8 @@ onMounted(async () => {
             key="salvage" @update="editUpdateHandler(record, column.dataIndex, $event)" />
           <CeilState v-else-if="column.dataIndex === 'state'" :edit="record.edit" :state="record.state"
             @update="editUpdateHandler(record, column.dataIndex, $event)" />
-          <CeilPhoto v-else-if="column.dataIndex === 'photo'" :edit="record.edit" :id="record.id" load
-            @update="editUpdateHandler(record, column.dataIndex, $event)" />
+          <CeilPhoto v-else-if="column.dataIndex === 'photo'" :edit="record.edit" :id="record.id" :src="record.photo"
+            load @update="editUpdateHandler(record, column.dataIndex, $event)" />
           <!-- Operation -->
           <CeilOperation v-else-if="column.dataIndex === 'operation'" :edit="record.edit"
             @start-edit="editStartHandler(record)" @cancel="editCancelHandler(record)"

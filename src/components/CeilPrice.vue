@@ -9,7 +9,7 @@ const prop = defineProps({
     default: false
   },
   price: {
-    type: Number
+    type: [Number, String]
   },
   disabled: {
     type: Boolean,
@@ -21,7 +21,7 @@ const editValue = ref(0)
 const selectHandler = () => {
 }
 const reset = () => {
-  editValue.value = prop.price
+  editValue.value = +prop.price
 }
 onMounted(reset)
 watchEffect(() => emit('update', editValue.value))
